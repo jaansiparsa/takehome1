@@ -9,8 +9,13 @@ import { file, folder, user } from "./schema";
  * @returns The newly created user object
  * @throws {TRPCError} If user creation fails
  */
-export async function createUser() {
-  const [newUser] = await db.insert(user).values({}).returning();
+export async function createUser(id?: string) {
+  const [newUser] = await db
+    .insert(user)
+    .values({
+      id,
+    })
+    .returning();
   if (!newUser) {
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
@@ -582,4 +587,12 @@ export async function removeFromFolderFolders(
 export async function getAllFolders() {
   const allFolders = await db.select().from(folder);
   return allFolders;
+}
+
+/**
+ * Retrieves all files from the database
+ * @returns Array of file objects
+ */
+export async function getAllFiles() {
+  return await db.select().from(file);
 }

@@ -16,12 +16,57 @@ const procedureWithTime = procedure.use(({ ctx, next }) => {
   });
 });
 
+// Middlewares can also specify inputs
+const procedureWithAsUserId = procedure
+  .input(
+    z.object({
+      asUserId: z
+        .string()
+        .describe("The id of the user initiating the request"),
+    }),
+  )
+  .use(({ ctx, next }) => {
+    return next(ctx);
+  });
+
 export const appRouter = t.router({
-  createUser: procedureWithTime.mutation(async ({ ctx }) => {
-    const newUser = await utils.createUser();
-    // ^ use the keyword `await` before all util functions as they interact with the database
-    return newUser;
+  createUser: procedureWithTime
+    .input(
+      z.object({
+        userId: z
+          .string()
+          .optional()
+          .describe(
+            "Optionally provide a user id so you can better identify th user",
+          ),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const newUser = await utils.createUser(input.userId);
+      // ^ use the keyword `await` before all util functions as they interact with the database
+      return {
+        user: newUser,
+        calledAt: ctx.time,
+      };
+      // ^ access the request context
+    }),
+  getAllUsers: procedure.query(async () => {
+    return await utils.getAllUsers();
   }),
+  getAllFiles: procedure
+    .meta({
+      description: "This is just here for debugging purposes",
+    })
+    .query(async () => {
+      return await utils.getAllFiles();
+    }),
+  getAllFolders: procedure
+    .meta({
+      description: "This is just here for debugging purposes",
+    })
+    .query(async () => {
+      return await utils.getAllFolders();
+    }),
   createFile: procedure
     .input(
       z.object({
@@ -34,14 +79,15 @@ export const appRouter = t.router({
 
       return null;
     }),
-  getFile: procedure
+  getFile: procedureWithAsUserId
     .input(
       z.object({
-        asUser: z.string(),
         fileId: z.string(),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
+      console.log(input.asUserId);
+      // ^ procedures can inherit inputs from their middleware
       return null;
     }),
   moveFile: procedure

@@ -4,10 +4,43 @@
 
 The purpose of this interview is to assess your ability to pick up some basic skill with a language you may never have used before (TypeScript) and to come up with *a* solution to an ambiguous problem. If at any point in time you are confused or if you have any issues with setup, please email `aidan@givefront.com` with the heading `Givefront Interview` and I will get back to you as soon as I can. When you are finished, please share your solution code with the github username `aidansunbury`.
 
-As this is an unbounded task that has no correct solution, we don't want you fussing over the details for hours on end. Try and spend `1-3` hours on this task, depending on your interest, availability, and prior knowledge of TypeScript. It is fine if you do not finish the entire task, so long as you have thought about possible approaches to the task and can walk us through your thought process.
+As this is an unbounded task that has no correct solution, we don't want you fussing over the details for hours on end. Try and spend `1-3` hours on this task, depending on your interest, course load, and prior knowledge of TypeScript. It is fine if you do not finish the entire task, so long as you have thought about possible approaches to the task and can walk us through your thought process. None of the things we are asking you to do in TypeScript are that complex, so please do ask ChatGPT, "explain how I would write this python code in TypeScript" or "what is this TypeScript Error." 
 
 ## Setup
 
+Fork the repository and clone it to your local machine.
+
+Install [bun](https://bun.sh/) and [nodejs](https://nodejs.org/en/download).
+
+Install the project dependencies
+```sh
+bun install
+```
+
+Create a local sqlite database file called `db.sqlite` at the root of the project, either manually or with this command on mac
+```sh
+touch db.sqlite
+```
+
+Push the database schema onto your database
+```sh
+bun db:push
+```
+
+Now there are two relevant things you may want to view.
+
+To inspect the contents of your database, run
+```sh
+bun db:studio
+```
+and visit the provided url. This will allow you to manually view and edit data for testing and debugging purposes.
+
+To actually run your procedures, start the local dev server
+```sh
+bun dev
+```
+
+And visit the provided testing UI at [http://localhost:3000/api/panel](http://localhost:3000/api/panel)
 
 
 ## Task
@@ -85,6 +118,8 @@ throw new TRPCError({
 });
 ```
 
+We are not going to worry about creating an actually secure login system. Instead, each request has an `asUser` input, which will represent the user making the request. The request going through or being blocked should depend on the permissions of the user id passed in the `asUser` property.
+
 How you handle the changing of permissions as files are moved between folders is up to you. However, if a user has been directly shared a file, they should not lose access to it. Also, if a user has been directly shared a folder, they should not lose access to it if it moves. 
 
 ### Utils
@@ -95,6 +130,8 @@ To call a utility, you must use the `await` keyword, as all of the utilities int
 ```ts
 const newUser = await utils.createUser();
 ```
+
+You may edit the utils if you want, but you should not have to and it is not recommended. The purpose of the utils is to abstract away the complexity of directly interfacing with the database, which you are not expected to know how to do. You may also write new utility functions that combine existing utils. The only file you should have to edit is `root.ts`. Edit other files at your own peril.
 
 ### Middlewares
 For a good permissions system, you should not have to rewrite your permissions logic from scratch every time. Take a look at the `procedureWithTime` middleware. It runs **before** the `createUser` procedure, and also modifies the request through `context`. Think about what the `moveFile` and `shareFile` procedures will both need to do. They both need to first check if the user has access to the file, and then modify some stored data in the database. Is there a way you could use middlewares to avoid repeating the same logic to check if hte user has access to the file?
